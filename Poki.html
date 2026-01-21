@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Launcher</title>
+    <style>
+        /* This makes the page look like a game menu */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #6e8efb, #a777e3); /* Nice blue/purple gradient */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 50px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .play-button {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            background-color: #ff4757; /* A bright "gamer" red */
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+        }
+
+        .play-button:hover {
+            background-color: #ff6b81;
+            transform: scale(1.1); /* Slightly grows when you hover */
+        }
+
+        .play-button:active {
+            transform: scale(0.95); /* Shrinks slightly when clicked */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>GAME HUB</h1>
+        <p>Ready to play thousands of games?</p>
+        <br>
+        <button class="play-button" onclick="launchGame()">PLAY NOW</button>
+    </div>
+
+    <script>
+        function launchGame() {
+            window.location.href = "https://poki.com/";
+        }
+    </script>
+
+</body>
+</html>
