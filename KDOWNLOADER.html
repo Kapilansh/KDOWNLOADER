@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickDownloader</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; text-align: center; }
+        header { background: #333; color: white; padding: 20px; position: sticky; top: 0; z-index: 100; }
+        
+        .search-container { margin-top: 15px; }
+        input[type="text"] { padding: 10px; width: 60%; border-radius: 5px 0 0 5px; border: 1px solid #ccc; outline: none; }
+        button#searchBtn { padding: 10px 20px; border-radius: 0 5px 5px 0; border: none; background: #28a745; color: white; cursor: pointer; }
+        
+        .nav-buttons { margin: 20px 0; display: flex; justify-content: center; gap: 10px; }
+        .btn { padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; font-weight: bold; }
+        .home-btn { background: #007bff; color: white; }
+        .ideas-btn { background: #ffc107; color: black; }
+
+        .file-list { max-width: 600px; margin: 20px auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .file-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
+        .download-link { color: #007bff; text-decoration: none; font-weight: bold; border: 1px solid #007bff; padding: 5px 10px; border-radius: 4px; }
+        .download-link:hover { background: #007bff; color: white; }
+        
+        .upload-section { margin: 20px; padding: 20px; border: 2px dashed #bbb; border-radius: 10px; display: inline-block; width: 80%; max-width: 560px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h2>QuickDownloader</h2>
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search file names...">
+        <button id="searchBtn" onclick="searchFiles()">Search</button>
+    </div>
+</header>
+
+<div class="nav-buttons">
+    <button class="btn home-btn" onclick="goHome()">🏠 Home</button>
+    <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kapilansh1245@gmail.com&su=App%20Idea" target="_blank" class="btn ideas-btn">💡 Give Ideas</a>
+</div>
+
+<div class="upload-section">
+    <h3>Upload File</h3>
+    <input type="file" id="fileInput">
+    <button onclick="uploadFile()" style="padding: 5px 15px; margin-top: 10px;">Upload</button>
+</div>
+
+<div class="file-list" id="fileList">
+    <h3>Available Files</h3>
+    <div id="listItems">
+        </div>
+</div>
+
+<script>
+    // This array stores the files in the browser's memory for this session
+    let filesData = [];
+
+    function uploadFile() {
+        const input = document.getElementById('fileInput');
+        if (input.files.length > 0) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                filesData.push({
+                    name: file.name,
+                    content: e.target.result
+                });
+                renderFiles(filesData);
+                input.value = ""; // Reset input
+                alert("File uploaded to session!");
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function renderFiles(list) {
+        const container = document.getElementById('listItems');
+        container.innerHTML = "";
+        list.forEach(file => {
+            const div = document.createElement('div');
+            div.className = 'file-item';
+            div.innerHTML = `
+                <span>${file.name}</span>
+                <a href="${file.content}" download="${file.name}" class="download-link">Download to Desktop</a>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function searchFiles() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = filesData.filter(f => f.name.toLowerCase().includes(query));
+        renderFiles(filtered);
+    }
+
+    function goHome() {
+        document.getElementById('searchInput').value = "";
+        renderFiles(filesData);
+    }
+</script>
+
+</body>
+</html>
