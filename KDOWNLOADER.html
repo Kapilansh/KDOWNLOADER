@@ -3,102 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuickDownloader</title>
+    <title>QuickDownloader Pro</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; text-align: center; }
-        header { background: #333; color: white; padding: 20px; position: sticky; top: 0; z-index: 100; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f0f2f5; color: #333; }
+        header { background: #1a73e8; color: white; padding: 20px; text-align: center; position: sticky; top: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
-        .search-container { margin-top: 15px; }
-        input[type="text"] { padding: 10px; width: 60%; border-radius: 5px 0 0 5px; border: 1px solid #ccc; outline: none; }
-        button#searchBtn { padding: 10px 20px; border-radius: 0 5px 5px 0; border: none; background: #28a745; color: white; cursor: pointer; }
+        .search-box { margin-top: 15px; display: flex; justify-content: center; }
+        input[type="text"] { padding: 12px; width: 70%; max-width: 400px; border: none; border-radius: 5px 0 0 5px; }
+        button#searchBtn { padding: 12px 20px; border: none; background: #0d47a1; color: white; border-radius: 0 5px 5px 0; cursor: pointer; }
         
-        .nav-buttons { margin: 20px 0; display: flex; justify-content: center; gap: 10px; }
-        .btn { padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; font-weight: bold; }
-        .home-btn { background: #007bff; color: white; }
-        .ideas-btn { background: #ffc107; color: black; }
+        .container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
+        .nav-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+        .btn { flex: 1; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-decoration: none; text-align: center; }
+        .home-btn { background: white; color: #1a73e8; border: 1px solid #1a73e8; }
+        .ideas-btn { background: #34a853; color: white; }
 
-        .file-list { max-width: 600px; margin: 20px auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .file-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
-        .download-link { color: #007bff; text-decoration: none; font-weight: bold; border: 1px solid #007bff; padding: 5px 10px; border-radius: 4px; }
-        .download-link:hover { background: #007bff; color: white; }
+        .file-card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .download-btn { background: #1a73e8; color: white; padding: 8px 15px; border-radius: 5px; text-decoration: none; font-size: 14px; }
         
-        .upload-section { margin: 20px; padding: 20px; border: 2px dashed #bbb; border-radius: 10px; display: inline-block; width: 80%; max-width: 560px; }
+        #status { text-align: center; color: #666; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <header>
-    <h2>QuickDownloader</h2>
-    <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Search file names...">
+    <h1>QuickDownloader</h1>
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search files in repository...">
         <button id="searchBtn" onclick="searchFiles()">Search</button>
     </div>
 </header>
 
-<div class="nav-buttons">
-    <button class="btn home-btn" onclick="goHome()">🏠 Home</button>
-    <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kapilansh1245@gmail.com&su=App%20Idea" target="_blank" class="btn ideas-btn">💡 Give Ideas</a>
-</div>
+<div class="container">
+    <div class="nav-bar">
+        <button class="btn home-btn" onclick="loadFiles()">🏠 Home</button>
+        <a href="https://mail.google.com/mail/?view=cm&fs=1&to=kapilansh1245@gmail.com&su=App%20Idea" target="_blank" class="btn ideas-btn">💡 Give Ideas</a>
+    </div>
 
-<div class="upload-section">
-    <h3>Upload File</h3>
-    <input type="file" id="fileInput">
-    <button onclick="uploadFile()" style="padding: 5px 15px; margin-top: 10px;">Upload</button>
-</div>
-
-<div class="file-list" id="fileList">
-    <h3>Available Files</h3>
-    <div id="listItems">
-        </div>
+    <div id="status">Connecting to server...</div>
+    <div id="fileList"></div>
 </div>
 
 <script>
-    // This array stores the files in the browser's memory for this session
-    let filesData = [];
+    // --- CONFIGURE THESE TWO ---
+    const GITHUB_USERNAME = "YOUR_GITHUB_USERNAME"; 
+    const REPO_NAME = "YOUR_REPO_NAME";
+    // ---------------------------
 
-    function uploadFile() {
-        const input = document.getElementById('fileInput');
-        if (input.files.length > 0) {
-            const file = input.files[0];
-            const reader = new FileReader();
+    let allFiles = [];
+
+    async function loadFiles() {
+        const status = document.getElementById('status');
+        const listDiv = document.getElementById('fileList');
+        status.innerText = "Fetching files...";
+        
+        try {
+            // Using GitHub API to get file list
+            const response = await fetch(`https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/`);
+            const data = await response.json();
             
-            reader.onload = function(e) {
-                filesData.push({
-                    name: file.name,
-                    content: e.target.result
-                });
-                renderFiles(filesData);
-                input.value = ""; // Reset input
-                alert("File uploaded to session!");
-            };
-            reader.readAsDataURL(file);
+            // Filter out index.html so it doesn't show in the list
+            allFiles = data.filter(item => item.type === 'file' && item.name !== 'index.html');
+            
+            displayFiles(allFiles);
+            status.innerText = `${allFiles.length} files available`;
+        } catch (error) {
+            status.innerText = "Error loading files. Check your Username/Repo name.";
+            console.error(error);
         }
     }
 
-    function renderFiles(list) {
-        const container = document.getElementById('listItems');
-        container.innerHTML = "";
-        list.forEach(file => {
-            const div = document.createElement('div');
-            div.className = 'file-item';
-            div.innerHTML = `
-                <span>${file.name}</span>
-                <a href="${file.content}" download="${file.name}" class="download-link">Download to Desktop</a>
+    function displayFiles(files) {
+        const listDiv = document.getElementById('fileList');
+        listDiv.innerHTML = "";
+        
+        files.forEach(file => {
+            const card = document.createElement('div');
+            card.className = 'file-card';
+            card.innerHTML = `
+                <span><strong>${file.name}</strong></span>
+                <a href="${file.download_url}" class="download-btn" download>Download</a>
             `;
-            container.appendChild(div);
+            listDiv.appendChild(card);
         });
     }
 
     function searchFiles() {
         const query = document.getElementById('searchInput').value.toLowerCase();
-        const filtered = filesData.filter(f => f.name.toLowerCase().includes(query));
-        renderFiles(filtered);
+        const filtered = allFiles.filter(f => f.name.toLowerCase().includes(query));
+        displayFiles(filtered);
     }
 
-    function goHome() {
-        document.getElementById('searchInput').value = "";
-        renderFiles(filesData);
-    }
+    // Load files immediately when app opens
+    window.onload = loadFiles;
 </script>
 
 </body>
