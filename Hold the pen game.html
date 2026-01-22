@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pen Catcher Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #333;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            touch-action: none;
+        }
+        canvas {
+            display: block;
+            background-color: #808080; /* Grey Background */
+        }
+        #ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .menu-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            pointer-events: auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        button {
+            padding: 15px 40px;
+            font-size: 20px;
+            cursor: pointer;
+            background: #2ecc71;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        button:hover { background: #27ae60; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<div id="ui-overlay">
+    <div id="start-screen" class="menu-card">
+        <h1>Pen Catcher</h1>
+        <p>Collect pens (+1), avoid bombs (-10)!</p>
+        <button onclick="startGame()">START</button>
+    </div>
+
+    <div id="game-over" class="menu-card hidden">
+        <h1>Time's Up!</h1>
+        <p>Round Score: <span id="final-score">0</span></p>
+        <p><strong>Highest Score: <span id="high-score">0</span></strong></p>
+        <button onclick="startGame()">RESTART</button>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const startScreen = document.getElementById('start-screen');
+    const gameOverScreen = document.getElementById('game-over');
+    
+    // Game Constants & State
+    let score = 0;
+    let timeLeft = 40;
+    let gameActive = false;
+    let items = [];
+    let baseSpeed = 3;
+    let speedMultiplier = 1;
+    let timerInterval, speedInterval;
+
+    const player = {
+        width: 80,
+        height: 60,
+        x: 0,
+        y: 0,
+        speed: 8
+    };
+
+    // Responsive sizing
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        player.y = canvas.height - 80;
+        if (!gameActive) player.x = canvas.width / 2 - player.width / 2;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Input Handling
+    const keys = {};
+    window.addEventListener('keydown', e => keys[e.code] = true);
+    window.addEventListener('keyup', e => keys[e.code] = false);
+    
+    // Touch/Mouse movement
+    const handleMove = (e) => {
+        if (!gameActive) return;
+        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        player.x = clientX - player.width / 2;
+    };
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('touchmove', handleMove);
+
+    function spawnItem() {
+        if (!gameActive) return;
+        const isBomb = Math.random() < 0.2; // 20% chance for bomb
+        const angle = (Math.random() - 0.5) * 0.5; // Random fall direction
+        
+        items.push({
+            x: Math.random() * canvas.width,
+            y: -20,
+            width: isBomb ? 30 : 10,
+            height: isBomb ? 30 : 40,
+            type: isBomb ? 'bomb' : 'pen',
+            vx: angle * 5,
+            vy: (baseSpeed + Math.random() * 2) * speedMultiplier
+        });
+    }
+
+    function update() {
+        if (!gameActive) return;
+
+        // Player movement (Keyboard)
+        if (keys['ArrowLeft'] || keys['KeyA']) player.x -= player.speed;
+        if (keys['ArrowRight'] || keys['KeyD']) player.x += player.speed;
+
+        // Boundary check
+        if (player.x < 0) player.x = 0;
+        if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
+
+        // Items logic
+        for (let i = items.length - 1; i >= 0; i--) {
+            let it = items[i];
+            it.y += it.vy;
+            it.x += it.vx;
+
+            // Collision Check
+            if (it.y + it.height > player.y && 
+                it.x < player.x + player.width && 
+                it.x + it.width > player.x) {
+                
+                if (it.type === 'pen') score += 1;
+                else score = Math.max(0, score - 10);
+                
+                items.splice(i, 1);
+                continue;
+            }
+
+            // Remove off-screen items
+            if (it.y > canvas.height) items.splice(i, 1);
+        }
+
+        if (Math.random() < 0.05) spawnItem();
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw Player (Pen Holder)
+        ctx.fillStyle = '#34495e';
+        ctx.fillRect(player.x, player.y, player.width, player.height);
+        ctx.strokeStyle = '#2c3e50';
+        ctx.strokeRect(player.x, player.y, player.width, player.height);
+
+        // Draw Items
+        items.forEach(it => {
+            if (it.type === 'pen') {
+                ctx.fillStyle = '#f1c40f'; // Yellow Pen
+                ctx.fillRect(it.x, it.y, it.width, it.height);
+            } else {
+                ctx.fillStyle = '#e74c3c'; // Red Bomb
+                ctx.beginPath();
+                ctx.arc(it.x + 15, it.y + 15, 15, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        });
+
+        // UI Text
+        ctx.fillStyle = "white";
+        ctx.font = "bold 24px Arial";
+        ctx.textAlign = "left";
+        ctx.fillText(`Time: ${timeLeft}s`, 20, 40);
+        ctx.textAlign = "right";
+        ctx.fillText(`Score: ${score}`, canvas.width - 20, 40);
+
+        if (gameActive) requestAnimationFrame(() => { update(); draw(); });
+    }
+
+    function startGame() {
+        score = 0;
+        timeLeft = 40;
+        items = [];
+        gameActive = true;
+        speedMultiplier = 1;
+        
+        startScreen.classList.add('hidden');
+        gameOverScreen.classList.add('hidden');
+
+        // Main Loops
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            if (timeLeft <= 0) endGame();
+        }, 1000);
+
+        // Random Speed Fluctuations
+        speedInterval = setInterval(() => {
+            speedMultiplier = 0.5 + Math.random() * 2; // Random speed factor
+        }, 3000);
+
+        update();
+        draw();
+    }
+
+    function endGame() {
+        gameActive = false;
+        clearInterval(timerInterval);
+        clearInterval(speedInterval);
+        
+        // Handle High Score
+        let savedHigh = localStorage.getItem('penHighScore') || 0;
+        if (score > savedHigh) {
+            savedHigh = score;
+            localStorage.setItem('penHighScore', score);
+        }
+
+        document.getElementById('final-score').innerText = score;
+        document.getElementById('high-score').innerText = savedHigh;
+        gameOverScreen.classList.remove('hidden');
+    }
+</script>
+
+</body>
+</html>
