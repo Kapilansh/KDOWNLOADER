@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akinator Launcher - AAKAS/K</title>
+    <style>
+        /* --- LOADER STYLES --- */
+        #loader-wrapper {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000a1f; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 9999;
+            transition: opacity 0.8s ease, visibility 0.8s;
+        }
+        .loader-q { font-size: 5rem; color: #00bfff; font-weight: bold; text-shadow: 0 0 20px #00bfff; margin-bottom: 20px; animation: spin 1.5s infinite linear; }
+        .loading-bar-container { width: 250px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+        .loading-bar-fill { width: 0%; height: 100%; background: #ffcc00; animation: fillBar 2s forwards; }
+        @keyframes spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+        @keyframes fillBar { to { width: 100%; } }
+
+        /* --- MAIN UI --- */
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; display: flex; justify-content: center; align-items: center; font-family: 'Arial Rounded MT Bold', sans-serif; overflow: hidden; background-color: #000; }
+        .bg-wrapper { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background: linear-gradient(rgba(0, 15, 50, 0.7), rgba(0, 5, 20, 0.8)), url('https://img.freepik.com/free-photo/question-mark-background-with-pencils_23-2148235288.jpg'); background-size: cover; background-position: center; animation: panAndZoom 25s infinite ease-in-out; }
+        @keyframes panAndZoom { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+        .container { text-align: center; background: rgba(255, 255, 255, 0.07); padding: 70px 90px; border-radius: 50px; backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9); display: none; }
+        
+        .play-button { display: inline-block; background: #ffcc00; color: #003366; text-decoration: none; padding: 25px 85px; font-size: 3.5rem; font-weight: 900; border-radius: 25px; box-shadow: 0 10px 0 #cc9900; transition: 0.2s; margin-bottom: 30px; text-transform: uppercase; cursor: pointer; }
+        .play-button:hover { transform: scale(1.1); background: #ffe066; }
+        .play-button:active { transform: translateY(8px); box-shadow: 0 2px 0 #cc9900; }
+
+        .credit-label { color: white; font-size: 1.4rem; letter-spacing: 7px; text-transform: uppercase; }
+        .name-highlight { color: #00bfff; text-shadow: 0 0 20px rgba(0, 191, 255, 0.8); }
+
+        /* --- SETTINGS ICON & MENU --- */
+        .settings-btn { position: fixed; top: 20px; right: 20px; font-size: 2.5rem; color: white; cursor: pointer; z-index: 100; transition: transform 0.5s; opacity: 0.7; }
+        .settings-btn:hover { transform: rotate(90deg); opacity: 1; }
+
+        .settings-menu { position: fixed; top: 80px; right: 20px; background: rgba(0, 0, 0, 0.8); padding: 20px; border-radius: 15px; border: 1px solid #00bfff; color: white; display: none; flex-direction: column; gap: 10px; z-index: 100; backdrop-filter: blur(10px); }
+        .settings-menu label { cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 1rem; }
+    </style>
+</head>
+<body>
+
+    <div id="loader-wrapper">
+        <div class="loader-q">?</div>
+        <div class="loading-bar-container"><div class="loading-bar-fill"></div></div>
+        <div class="loading-text">Loading Assets...</div>
+    </div>
+
+    <div class="bg-wrapper"></div>
+
+    <div class="settings-btn" onclick="toggleSettings()">⚙️</div>
+    <div class="settings-menu" id="settingsMenu">
+        <h4 style="margin:0 0 10px 0;">Settings</h4>
+        <label>
+            <input type="checkbox" id="soundToggle" checked> Sound Effects
+        </label>
+    </div>
+
+    <audio id="hoverSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
+    <audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+
+    <div class="container" id="mainMenu">
+        <a href="https://en.akinator.com/theme-selection" class="play-button" onmouseover="playHover()" onclick="playClick()">PLAY</a>
+        <div class="credit-label">By <span class="name-highlight">AAKAS/K</span></div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            setTimeout(() => {
+                document.getElementById('loader-wrapper').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loader-wrapper').style.visibility = 'hidden';
+                    document.getElementById('mainMenu').style.display = 'block';
+                }, 800);
+            }, 2500);
+        };
+
+        const hSnd = document.getElementById("hoverSound");
+        const cSnd = document.getElementById("clickSound");
+        const soundEnabled = document.getElementById("soundToggle");
+
+        function toggleSettings() {
+            const menu = document.getElementById('settingsMenu');
+            menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function playHover() {
+            if(soundEnabled.checked) {
+                hSnd.currentTime = 0;
+                hSnd.play().catch(() => {});
+            }
+        }
+
+        function playClick() {
+            if(soundEnabled.checked) {
+                cSnd.play().catch(() => {});
+            }
+        }
+    </script>
+</body>
+</html>
